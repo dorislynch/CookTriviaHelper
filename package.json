@@ -1,7 +1,7 @@
 
 {
   "name": "react-native-cook-trivia-helper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A ReactNative CookTriviaHelper Component for android and iOS",
   "main": "index.js",
   "scripts": {

